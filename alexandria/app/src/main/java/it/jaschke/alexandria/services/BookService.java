@@ -198,6 +198,18 @@ public class BookService extends IntentService {
 
         } catch (JSONException e) {
             Log.e(LOG_TAG, "Error ", e);
+        } catch (NullPointerException e) {
+            Log.e(LOG_TAG, "Error ", e);
+
+            // NOTE This is less than ideal but to make this app not require the Internet to
+            // add new books is probably outside of the scope of this project. I'd have to
+            // refactor it to allow you to save ISBN numbers without accompanying data and
+            // then schedule some job to look it up later when a connection is available.
+            // This approach is the simplest way to let the user know what's up.
+            Intent messageIntent = new Intent(MainActivity.MESSAGE_EVENT);
+            messageIntent.putExtra(MainActivity.MESSAGE_KEY,
+                    getResources().getString(R.string.error_no_connection));
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(messageIntent);
         }
     }
 
