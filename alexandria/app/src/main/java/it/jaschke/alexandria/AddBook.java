@@ -1,7 +1,6 @@
 package it.jaschke.alexandria;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -17,7 +16,6 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import it.jaschke.alexandria.data.AlexandriaContract;
 import it.jaschke.alexandria.services.BookService;
@@ -26,6 +24,7 @@ import it.jaschke.alexandria.services.DownloadImage;
 
 public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
     private static final String TAG = "INTENT_TO_SCAN_ACTIVITY";
+    public static final int SCANNER_REQUEST_CODE = 1;
     private EditText ean;
     private final int LOADER_ID = 1;
     private View rootView;
@@ -88,19 +87,8 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
         rootView.findViewById(R.id.scan_button).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // This is the callback method that the system will invoke when your button is
-                // clicked. You might do this by launching another app or by including the
-                //functionality directly in this app.
-                // Hint: Use a Try/Catch block to handle the Intent dispatch gracefully, if you
-                // are using an external app.
-                //when you're done, remove the toast below.
-                Context context = getActivity();
-                CharSequence text = "This button should let you scan a book for its barcode!";
-                int duration = Toast.LENGTH_SHORT;
-
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
-
+                Intent intent = new Intent(getActivity(), ScannerActivity.class);
+                startActivityForResult(intent, SCANNER_REQUEST_CODE);
             }
         });
 
@@ -132,6 +120,16 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
 
     private void restartLoader() {
         getLoaderManager().restartLoader(LOADER_ID, null, this);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == SCANNER_REQUEST_CODE) {
+                ean.setText(data.getStringExtra(ScannerActivity.EXTRA_BAR_CODE));
+            }
+        }
     }
 
     @Override
