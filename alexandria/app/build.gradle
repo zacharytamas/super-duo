@@ -14,7 +14,7 @@ def getVersionName = { ->
 }
 
 
-version = getVersionName()
+version = "1.0"
 group = "it.jaschke"
 
 android {
