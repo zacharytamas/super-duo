@@ -54,7 +54,7 @@ android {
 
 dependencies {
     compile 'com.android.support:appcompat-v7:21.0.3'
-
+    compile 'me.dm7.barcodescanner:zxing:1.7.2'
 }
 
 sonarRunner {
@@ -75,7 +75,5 @@ sonarRunner {
         property "sonar.profile","Android Lint"
         property "sonar.sourceEncoding", "UTF-8"
         property "sonar.test", "src/androidTest/java"
-
-
     }
 }
