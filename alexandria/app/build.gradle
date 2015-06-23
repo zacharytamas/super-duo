@@ -1,0 +1,81 @@
+apply plugin: 'com.android.application'
+apply plugin: "sonar-runner"
+
+/*
+ * Gets the version name from the latest Git tag
+ */
+def getVersionName = { ->
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'describe', '--tags'
+        standardOutput = stdout
+    }
+    return stdout.toString().trim()
+}
+
+
+version = getVersionName()
+group = "it.jaschke"
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.2"
+
+    defaultConfig {
+        applicationId "it.jaschke.alexandria"
+        minSdkVersion 15
+        targetSdkVersion 21
+        versionCode 1
+        versionName version
+    }
+
+    jacoco {
+        version = '0.6.2.201302030002'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
+    buildTypes {
+        release {
+            testCoverageEnabled = true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug{
+            testCoverageEnabled = true
+        }
+
+    }
+    lintOptions {
+        abortOnError false
+    }
+}
+
+dependencies {
+    compile 'com.android.support:appcompat-v7:21.0.3'
+
+}
+
+sonarRunner {
+    sonarProperties {
+        property "sonar.host.url", "http://192.168.178.46:9000"
+        property "sonar.jdbc.url", "jdbc:mysql://192.168.178.46:3306/sonar?useUnicode=true&characterEncoding=utf8"
+        property "sonar.jdbc.driverClassName", "com.mysql.jdbc.Driver"
+        property "sonar.jdbc.username", "sonar"
+        property "sonar.jdbc.password", "sonar"
+
+        property "sonar.projectKey", "Alexandria"
+        property "sonar.projectName", "Alexandria"
+        property "sonar.projectVersion", version
+        property "sonar.language", "java"
+        property "sonar.sources","src/main/java"
+        property "sonar.binaries", "build"
+        property "sonar.test", "src/androidTest/java"
+        property "sonar.profile","Android Lint"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.test", "src/androidTest/java"
+
+
+    }
+}
