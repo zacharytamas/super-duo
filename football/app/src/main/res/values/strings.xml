@@ -43,4 +43,6 @@
     <string name="content_desc_match_time">Match time</string>
     <string name="content_desc_awayteam_crest">Away team crest</string>
     <string name="content_desc_awayteam_name">Away team name</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
 </resources>
