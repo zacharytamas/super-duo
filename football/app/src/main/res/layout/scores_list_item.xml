@@ -54,7 +54,7 @@
                 android:text="@string/test_text"
                 android:layout_gravity="center"
                 android:gravity="center"
-                android:id="@+id/data_textview"/>
+                android:id="@+id/match_time_textview"/>
 
         </LinearLayout>
         <LinearLayout

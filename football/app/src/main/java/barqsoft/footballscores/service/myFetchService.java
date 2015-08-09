@@ -1,11 +1,14 @@
 package barqsoft.footballscores.service;
 
 import android.app.IntentService;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,7 +26,9 @@ import java.util.TimeZone;
 import java.util.Vector;
 
 import barqsoft.footballscores.DatabaseContract;
+import barqsoft.footballscores.FootballScoresWidget;
 import barqsoft.footballscores.R;
+import barqsoft.footballscores.Utilies;
 
 /**
  * Created by yehya khaled on 3/2/2015.
@@ -241,6 +246,25 @@ public class myFetchService extends IntentService
                     //Log.v(LOG_TAG,Away);
                     //Log.v(LOG_TAG,Home_goals);
                     //Log.v(LOG_TAG,Away_goals);
+
+                    AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+                    int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(this, FootballScoresWidget.class));
+                    int layoutId = R.layout.football_scores_widget;
+
+                    for (int appWidgetId : appWidgetIds) {
+                        RemoteViews views = new RemoteViews(getPackageName(), layoutId);
+
+                        views.setImageViewResource(R.id.home_crest, Utilies.getTeamCrestByTeamName(Home));
+                        views.setTextViewText(R.id.home_name, Home);
+
+                        views.setTextViewText(R.id.score_textview, Utilies.getScores(Integer.parseInt(Home_goals), Integer.parseInt(Away_goals)));
+                        views.setTextViewText(R.id.match_time_textview, mTime);
+
+                        views.setImageViewResource(R.id.away_crest, Utilies.getTeamCrestByTeamName(Away));
+                        views.setTextViewText(R.id.away_crest, Away);
+
+                        appWidgetManager.updateAppWidget(appWidgetId, views);
+                    }
 
                     values.add(match_values);
                 }
