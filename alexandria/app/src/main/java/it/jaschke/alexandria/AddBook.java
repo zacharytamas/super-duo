@@ -9,6 +9,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +35,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
 
     private String mScanFormat = "Format:";
     private String mScanContents = "Contents:";
+    private Cursor mBookResult;
 
 
     public AddBook() {
@@ -67,20 +69,21 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
             @Override
             public void afterTextChanged(Editable s) {
                 String query = s.toString();
+
+                if (query == "") {
+                    clearFields();
+                }
+
                 //catch isbn10 numbers
                 if (query.length() == 10 && !query.startsWith("978")) {
                     query = "978" + query;
                 }
                 if (query.length() < 13) {
-                    clearFields();
+//                    clearFields();
                     return;
                 }
                 //Once we have an ISBN, start a book intent
-                Intent bookIntent = new Intent(getActivity(), BookService.class);
-                bookIntent.putExtra(BookService.EAN, query);
-                bookIntent.setAction(BookService.FETCH_BOOK);
-                getActivity().startService(bookIntent);
-                AddBook.this.restartLoader();
+                fetchBookResult(query);
             }
         });
 
@@ -96,6 +99,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
             @Override
             public void onClick(View view) {
                 ean.setText("");
+                clearFields();
             }
         });
 
@@ -107,15 +111,27 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
                 bookIntent.setAction(BookService.DELETE_BOOK);
                 getActivity().startService(bookIntent);
                 ean.setText("");
+                clearFields();
             }
         });
 
         if (savedInstanceState != null) {
-            ean.setText(savedInstanceState.getString(EAN_CONTENT));
+            String query = savedInstanceState.getString(EAN_CONTENT);
+            ean.setText(query);
             ean.setHint("");
+            clearFields();
         }
 
         return rootView;
+    }
+
+    private void fetchBookResult(String query) {
+        Log.i(TAG, "Trying to make fetch happen");
+        Intent bookIntent = new Intent(getActivity(), BookService.class);
+        bookIntent.putExtra(BookService.EAN, query);
+        bookIntent.setAction(BookService.FETCH_BOOK);
+        getActivity().startService(bookIntent);
+        AddBook.this.restartLoader();
     }
 
     private void restartLoader() {
@@ -141,6 +157,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
         if (eanStr.length() == 10 && !eanStr.startsWith("978")) {
             eanStr = "978" + eanStr;
         }
+
         return new CursorLoader(
                 getActivity(),
                 AlexandriaContract.BookEntry.buildFullBookUri(Long.parseLong(eanStr)),
@@ -154,9 +171,15 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
     @Override
     public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
         if (!data.moveToFirst()) {
+            mBookResult = null;
             return;
         }
+        mBookResult = data;
+        renderBookResult(data);
+    }
 
+    private void renderBookResult(Cursor data) {
+        Log.i(TAG, "Renderin' the book result");
         String bookTitle = data.getString(data.getColumnIndex(AlexandriaContract.BookEntry.TITLE));
         ((TextView) rootView.findViewById(R.id.bookTitle)).setText(bookTitle);
 
@@ -164,10 +187,16 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
         ((TextView) rootView.findViewById(R.id.bookSubTitle)).setText(bookSubTitle);
 
         String authors = data.getString(data.getColumnIndex(AlexandriaContract.AuthorEntry.AUTHOR));
-        // TODO What if the authors string does not have a comma?
-        String[] authorsArr = authors.split(",");
+        String[] authorsArr;
+
+        if (authors == null) {
+            authorsArr = new String[0];
+        } else {
+            authorsArr = authors.split(",");
+        }
+
         ((TextView) rootView.findViewById(R.id.authors)).setLines(authorsArr.length);
-        ((TextView) rootView.findViewById(R.id.authors)).setText(authors.replace(",", "\n"));
+        ((TextView) rootView.findViewById(R.id.authors)).setText(authors != null ? authors.replace(",", "\n") : "");
         String imgUrl = data.getString(data.getColumnIndex(AlexandriaContract.BookEntry.IMAGE_URL));
         if (Patterns.WEB_URL.matcher(imgUrl).matches()) {
             new DownloadImage((ImageView) rootView.findViewById(R.id.bookCover)).execute(imgUrl);
@@ -187,6 +216,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
     }
 
     private void clearFields() {
+        Log.i(TAG, "Clearin' the fields");
         ((TextView) rootView.findViewById(R.id.bookTitle)).setText("");
         ((TextView) rootView.findViewById(R.id.bookSubTitle)).setText("");
         ((TextView) rootView.findViewById(R.id.authors)).setText("");
