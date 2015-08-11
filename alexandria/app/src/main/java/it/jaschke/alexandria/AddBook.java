@@ -70,7 +70,7 @@ public class AddBook extends Fragment implements LoaderManager.LoaderCallbacks<C
             public void afterTextChanged(Editable s) {
                 String query = s.toString();
 
-                if (query == "") {
+                if (query.equals("")) {
                     clearFields();
                 }
 
